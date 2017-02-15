@@ -69,7 +69,9 @@ function exitScriBt() # ID
         echo -e "\n${SCS} Configuration file ${NOC} created successfully\n${INF} You may modify the config, and automate ScriBt next time";
     } # prefGen
 
-    [[ "$RQ_PGN" == [Yy] ]] && prefGen;
+    [[ "$RQ_PGN" == [Yy] ]] && prefGen || ((set -o posix; set) > ${TV2});
+    echo -e "\n${EXE} Unsetting all variables";
+    unset `diff temp_v1.txt temp_v2.txt | grep SB | sed -e 's/[<>] /    /g' | awk -F "=" '{print $1}'`
     echo -e "\n${SCS:-[:)]} Thanks for using ScriBt.\n";
     [[ "$1" == "0" ]] && echo -e "${CL_LGN}[${NONE}${CL_LRD}<3${NONE}${CL_LGN}]${NONE} Peace! :)\n" ||\
         echo -e "${CL_LRD}[${NONE}${CL_RED}<${NONE}${CL_LGR}/${NONE}${CL_RED}3${NONE}${CL_LRD}]${NONE} Failed somewhere :(\n";
@@ -138,11 +140,15 @@ function rom_select() # D 1,2
     for CT in {35..40}; do
         echo -e "${CT}. ${ROMS[$CT]}";
     done | pr -t -2
-    unset CT CNS; # Unset these
+    unset CT CNS SBRN; # Unset these
     echo -e "\n=======================================================${NONE}\n";
     [ -z "$automate" ] && prompt SBRN;
     rom_names "$SBRN";
-    echo -e "\n${INF} You have chosen -> ${ROM_FN}\n";
+    if [[ "${SBRN}" == "Invalid" ]]; then
+        echo -e "\n${LRED}Invalid Selection.${NONE} Going back."; rom_select;
+    else
+        echo -e "\n${INF} You have chosen -> ${ROM_FN}\n";
+    fi
 } # rom_select
 
 function shut_my_mouth() # ID
@@ -821,7 +827,7 @@ function build() # 4
             kbuild;
         else
             export ARCH="${KARCH}" CROSS_COMPILE="${KTCL}/bin/${KCCP}";
-            KSTS=`echo -e "Arch : ${KARCH}\nDefinition Config : ${KDEFC}"`;
+            KSTS=`echo -e "Arch : ${KARCH}\nDefinition Config : ${KDEFC}\nToolchain : ${KTCL}"`;
         fi
         echo -ne "\033]0;ScriBt : KernelBuilding\007";
         echo -e "===============${CL_LCN}[!]${NONE} ${CL_WYT}Kernel Building${NONE} ${CL_LCN}[!]${NONE}=================";
